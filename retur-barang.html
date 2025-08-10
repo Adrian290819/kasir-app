@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Retur Barang - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+<script src="tema.js" defer></script>
+</head>
+<body>
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>🧾 Kasir Mutia</h2>
+    </div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html"class="active">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+      <button id="logout-btn" class="btn-logout">Logout</button>
+        <div style="padding: 10px; text-align: center;">
+          <button onclick="toggleThemeQuick()" class="theme-button">
+          <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+
+  <div class="dashboard-container">
+        </div>
+      </nav>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Retur Barang</h1>
+    </header>
+
+    <!-- Form tambah retur -->
+    <form id="form-retur">
+      <div class="form-grid">
+        <input type="date" id="tanggal" required />
+        <input type="text" id="nama-produk" placeholder="Nama Produk" required />
+        <input type="number" id="jumlah" placeholder="Jumlah" required />
+        <input type="text" id="alasan" placeholder="Alasan Retur" required />
+      </div>
+      <button type="submit" class="btn btn-add">Tambah Retur</button>
+    </form>
+
+    <!-- Filter dan pencarian -->
+    <div class="filter-section">
+      <input type="date" id="filter-tanggal" />
+      <input type="text" id="search-produk" placeholder="Cari produk..." />
+    </div>
+
+    <!-- Tabel retur -->
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Produk</th>
+          <th>Jumlah</th>
+          <th>Alasan</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="retur-tbody"></tbody>
+    </table>
+  </main>
+</div>
+
+<!-- Modal konfirmasi hapus -->
+<div class="modal" id="deleteModal">
+  <div class="modal-content">
+    <p>Yakin ingin menghapus data retur ini?</p>
+    <button id="confirmDelete" class="btn btn-delete">Hapus</button>
+    <button onclick="closeModal()" class="btn">Batal</button>
+  </div>
+</div>
+
+<script>
+  if (localStorage.getItem("isLoggedIn") !== "true") location.href = "login.html";
+
+  const username = localStorage.getItem("username");
+  const returKey = `kasirapp_retur_${username}`;
+  let returList = JSON.parse(localStorage.getItem(returKey) || "[]");
+
+  const tbody = document.getElementById("retur-tbody");
+  const form = document.getElementById("form-retur");
+  const filterTanggal = document.getElementById("filter-tanggal");
+  const searchProduk = document.getElementById("search-produk");
+  let deleteIndex = null;
+
+  function renderRetur() {
+    tbody.innerHTML = "";
+    let filtered = returList;
+
+    if (filterTanggal.value) {
+      filtered = filtered.filter(r => r.tanggal === filterTanggal.value);
+    }
+    if (searchProduk.value) {
+      filtered = filtered.filter(r => r.nama.toLowerCase().includes(searchProduk.value.toLowerCase()));
+    }
+
+    filtered.forEach((r, i) => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${r.tanggal}</td>
+          <td>${r.nama}</td>
+          <td>${r.jumlah}</td>
+          <td>${r.alasan}</td>
+          <td><button class="btn btn-delete" onclick="openModal(${i})">Hapus</button></td>
+        </tr>
+      `;
+    });
+  }
+
+  form.onsubmit = e => {
+    e.preventDefault();
+    returList.push({
+      tanggal: document.getElementById("tanggal").value,
+      nama: document.getElementById("nama-produk").value,
+      jumlah: parseInt(document.getElementById("jumlah").value),
+      alasan: document.getElementById("alasan").value
+    });
+    localStorage.setItem(returKey, JSON.stringify(returList));
+    form.reset();
+    renderRetur();
+  };
+
+  function openModal(i) {
+    deleteIndex = i;
+    document.getElementById("deleteModal").style.display = "flex";
+  }
+
+  function closeModal() {
+    document.getElementById("deleteModal").style.display = "none";
+  }
+
+  document.getElementById("confirmDelete").onclick = () => {
+    returList.splice(deleteIndex, 1);
+    localStorage.setItem(returKey, JSON.stringify(returList));
+    closeModal();
+    renderRetur();
+  };
+
+  filterTanggal.oninput = renderRetur;
+  searchProduk.oninput = renderRetur;
+
+  document.getElementById("logout-btn").onclick = () => {
+    if (confirm("Yakin logout?")) {
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("username");
+      location.href = "login.html";
+    }
+  };
+
+  renderRetur();
+</script>
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+
+// Tutup sidebar setelah klik menu di mobile
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+</script>
+</body>
+</html>

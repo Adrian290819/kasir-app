@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Stok Masuk - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <script src="tema.js" defer></script>
+</head>
+<body>
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>🧾 Kasir Mutia</h2>
+    </div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html" class="active">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+      <button id="logout-btn" class="btn-logout">Logout</button>  
+<div style="padding: 10px; text-align: center;">
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</div>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Stok Masuk</h1>
+    </header>
+
+    <!-- Form tambah / edit stok -->
+    <form id="form-stok">
+      <select id="produk" required></select>
+      <input type="number" id="jumlah" placeholder="Jumlah Masuk" required />
+      <input type="date" id="tanggal" required />
+      <button type="submit" id="btn-submit">Tambah Stok</button>
+    </form>
+
+    <!-- Tabel stok masuk -->
+    <table>
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>Produk</th>
+          <th>Jumlah</th>
+          <th>Aksi</th>
+        </tr>
+      </thead>
+      <tbody id="stok-tbody"></tbody>
+    </table>
+  </main>
+</div>
+
+<script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        window.location.href = 'login.html';
+      }
+    });
+
+const username = localStorage.getItem("username");
+const produkKey = `kasirapp_produk_list_${username}`;
+const stokMasukKey = `kasirapp_stokmasuk_list_${username}`;
+
+let produkList = JSON.parse(localStorage.getItem(produkKey) || "[]");
+let stokMasukList = JSON.parse(localStorage.getItem(stokMasukKey) || "[]");
+
+const selectProduk = document.getElementById("produk");
+const form = document.getElementById("form-stok");
+const jumlahInput = document.getElementById("jumlah");
+const tanggalInput = document.getElementById("tanggal");
+const tbody = document.getElementById("stok-tbody");
+const btnSubmit = document.getElementById("btn-submit");
+
+let editIndex = null;
+
+// Pastikan semua produk mengikuti format lama
+produkList = produkList.map(p => ({
+  nama: p.nama || p.name || "",
+  stok: p.stok ?? p.stock ?? 0,
+  kategori: p.kategori || p.category || "",
+  harga: p.harga ?? p.price ?? 0,
+  gambar: p.gambar || p.image || ""
+}));
+
+function renderProdukOptions() {
+  selectProduk.innerHTML = '<option value="">Pilih Produk</option>';
+  produkList.forEach((p, i) => {
+    selectProduk.innerHTML += `<option value="${i}">${p.nama}</option>`;
+  });
+}
+
+function renderStokMasuk() {
+  tbody.innerHTML = "";
+  stokMasukList.forEach((s, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${s.tanggal}</td>
+      <td>${s.produk}</td>
+      <td>${s.jumlah}</td>
+      <td>
+        <button onclick="editStok(${i})" class="btn btn-add">Edit</button>
+        <button onclick="hapusStok(${i})" class="btn btn-delete">Hapus</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function simpanData() {
+  localStorage.setItem(produkKey, JSON.stringify(produkList));
+  localStorage.setItem(stokMasukKey, JSON.stringify(stokMasukList));
+  renderProdukOptions();
+  renderStokMasuk();
+}
+
+form.onsubmit = e => {
+  e.preventDefault();
+  const idxProduk = parseInt(selectProduk.value);
+  if (isNaN(idxProduk)) return alert("Pilih produk!");
+  const jumlah = parseInt(jumlahInput.value);
+  const tanggal = tanggalInput.value;
+
+  if (editIndex === null) {
+    // Tambah stok baru
+    produkList[idxProduk].stok = (produkList[idxProduk].stok || 0) + jumlah;
+    stokMasukList.push({
+      tanggal,
+      produk: produkList[idxProduk].nama,
+      jumlah,
+      idxProduk
+    });
+  } else {
+    // Edit stok masuk
+    const stokLama = stokMasukList[editIndex];
+    produkList[stokLama.idxProduk].stok -= stokLama.jumlah; // kurangi stok lama
+    produkList[idxProduk].stok = (produkList[idxProduk].stok || 0) + jumlah; // tambah stok baru
+
+    stokMasukList[editIndex] = {
+      tanggal,
+      produk: produkList[idxProduk].nama,
+      jumlah,
+      idxProduk
+    };
+    editIndex = null;
+    btnSubmit.textContent = "Tambah Stok";
+  }
+
+  simpanData();
+  form.reset();
+};
+
+function editStok(i) {
+  const data = stokMasukList[i];
+  selectProduk.value = data.idxProduk;
+  jumlahInput.value = data.jumlah;
+  tanggalInput.value = data.tanggal;
+  editIndex = i;
+  btnSubmit.textContent = "Simpan Perubahan";
+}
+
+function hapusStok(i) {
+  if (!confirm("Yakin hapus data ini?")) return;
+  const data = stokMasukList[i];
+
+  // Cari index produk jika idxProduk kosong
+  let produkIndex = data.idxProduk;
+  if (produkIndex === undefined || produkIndex === null) {
+    produkIndex = produkList.findIndex(p => p.nama === data.produk);
+  }
+
+  // Kurangi stok jika produk ditemukan
+  if (produkIndex !== -1) {
+    produkList[produkIndex].stok -= data.jumlah;
+    if (produkList[produkIndex].stok < 0) produkList[produkIndex].stok = 0; // jangan minus
+  }
+
+  // Hapus dari stok masuk
+  stokMasukList.splice(i, 1);
+  simpanData();
+};
+
+// Render awal
+renderProdukOptions();
+renderStokMasuk();
+</script>
+<script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+
+// Tutup sidebar setelah klik menu di mobile
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+</script>
+</body>
+</html>

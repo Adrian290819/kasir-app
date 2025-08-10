@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Produk - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <script src="tema.js" defer></script>
+  <style>
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html"class="active">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+          <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>Data Produk</h1>
+      </header>
+
+      <form id="form-produk">
+        <input type="text" id="nama-produk" placeholder="Nama Produk" required />
+        <input type="text" id="kategori" placeholder="Kategori" required />
+        <input type="number" id="harga" placeholder="Harga" required />
+        <input type="number" id="stok" placeholder="Stok" required />
+        <input type="text" id="gambar" placeholder="URL Gambar" />
+        <button type="submit" class="add-btn">➕ Tambah Produk</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Kategori</th>
+            <th>Harga</th>
+            <th>Stok</th>
+            <th>Gambar</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="produk-tbody"></tbody>
+      </table>
+    </main>
+  </div>
+
+  <!-- Modal Edit -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <h2>Edit Produk</h2>
+      <input type="text" id="edit-nama" required />
+      <input type="text" id="edit-kategori" required />
+      <input type="number" id="edit-harga" required />
+      <input type="number" id="edit-stok" required />
+      <input type="text" id="edit-gambar" />
+      <div style="text-align:right;">
+        <button class="btn-save" id="saveEditBtn">Simpan</button>
+        <button class="btn-cancel" onclick="closeModal()">Batal</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    if(localStorage.getItem("isLoggedIn") !== "true"){
+      location.href = "login.html";
+    }
+
+    const username = localStorage.getItem("username") || "guest";
+    const produkKey = `kasirapp_produk_list_${username}`;
+    let produkList = JSON.parse(localStorage.getItem(produkKey) || "[]");
+
+    const tbody = document.getElementById("produk-tbody");
+    const form = document.getElementById("form-produk");
+    let editIndex = null;
+
+    function normalizeProduk(p) {
+      return {
+        id: p.id || 'p' + Date.now() + Math.floor(Math.random()*1000),
+        name: p.name || p.nama || '',
+        category: p.category || p.kategori || '',
+        price: p.price || p.harga || 0,
+        stock: p.stock || p.stok || 0,
+        image: p.image || p.gambar || ''
+      };
+    }
+
+    function renderProduk(){
+      tbody.innerHTML = "";
+      produkList.forEach((p, i) => {
+        const data = normalizeProduk(p);
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${data.name}</td>
+          <td>${data.category}</td>
+          <td>Rp ${data.price.toLocaleString("id-ID")}</td>
+          <td>${data.stock}</td>
+          <td><img src="${data.image || ''}" alt="" width="40" /></td>
+          <td>
+  <button onclick="openModal(${i})" class="edit-btn">✏️ Edit</button>
+  <button onclick="hapusProduk(${i})" class="delete-btn">🗑️ Hapus</button>
+</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function simpanProduk(){
+      localStorage.setItem(produkKey, JSON.stringify(produkList.map(normalizeProduk)));
+      renderProduk();
+    }
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      const newData = normalizeProduk({
+        nama: document.getElementById("nama-produk").value,
+        kategori: document.getElementById("kategori").value,
+        harga: parseInt(document.getElementById("harga").value),
+        stok: parseInt(document.getElementById("stok").value),
+        gambar: document.getElementById("gambar").value
+      });
+      produkList.push(newData);
+      simpanProduk();
+      form.reset();
+    };
+
+    function hapusProduk(i){
+      if(confirm("Yakin hapus produk ini?")){
+        produkList.splice(i, 1);
+        simpanProduk();
+      }
+    }
+
+    function openModal(i){
+      editIndex = i;
+      const p = normalizeProduk(produkList[i]);
+      document.getElementById("edit-nama").value = p.name;
+      document.getElementById("edit-kategori").value = p.category;
+      document.getElementById("edit-harga").value = p.price;
+      document.getElementById("edit-stok").value = p.stock;
+      document.getElementById("edit-gambar").value = p.image;
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    function closeModal(){
+      document.getElementById("editModal").style.display = "none";
+    }
+
+    document.getElementById("saveEditBtn").onclick = function(){
+      if(editIndex !== null){
+        produkList[editIndex] = normalizeProduk({
+          nama: document.getElementById("edit-nama").value,
+          kategori: document.getElementById("edit-kategori").value,
+          harga: parseInt(document.getElementById("edit-harga").value),
+          stok: parseInt(document.getElementById("edit-stok").value),
+          gambar: document.getElementById("edit-gambar").value
+        });
+        simpanProduk();
+        closeModal();
+      }
+    };
+
+    renderProduk();
+  </script>
+  <script>
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+
+// Tutup sidebar setelah klik menu di mobile
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+  link.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      document.querySelector('.sidebar').classList.remove('open');
+    }
+  });
+});
+</script>
+</body>
+</html>

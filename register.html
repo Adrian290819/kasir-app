@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Daftar Akun - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f4f6f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .register-container {
+      background: white;
+      padding: 40px;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      max-width: 400px;
+      width: 100%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 24px;
+      font-size: 1.8rem;
+      color: #2c3e50;
+    }
+    input {
+      width: 90%;
+      padding: 12px;
+      margin: 10px 0;
+      font-size: 1rem;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+    }
+    input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    button:hover {
+      background: #2980b9;
+    }
+    .error-msg {
+      color: #e74c3c;
+      font-size: 0.9rem;
+      margin-top: 10px;
+    }
+    a {
+      display: block;
+      margin-top: 16px;
+      text-decoration: none;
+      color: #3498db;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="register-container">
+    <h1>📝 Daftar Akun</h1>
+    <form id="register-form">
+      <input type="text" id="reg-username" placeholder="Username" required />
+      <input type="password" id="reg-password" placeholder="Password" required />
+      <button type="submit">Daftar</button>
+      <p class="error-msg" id="register-error"></p>
+    </form>
+    <a href="login.html">Sudah punya akun? Login</a>
+  </div>
+
+  <script>
+    const registerForm = document.getElementById('register-form');
+    const regError = document.getElementById('register-error');
+
+    registerForm.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const username = document.getElementById('reg-username').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      if (!username || !password) {
+        regError.textContent = 'Semua kolom wajib diisi.';
+        return;
+      }
+
+      const users = JSON.parse(localStorage.getItem('kasirapp_users') || '[]');
+
+      const usernameExists = users.some(u => u.username === username);
+      if (usernameExists) {
+        regError.textContent = 'Username sudah digunakan.';
+        return;
+      }
+
+      users.push({ username, password });
+      localStorage.setItem('kasirapp_users', JSON.stringify(users));
+      alert('Akun berhasil dibuat. Silakan login.');
+
+      window.location.href = 'login.html';
+    });
+    const newUser = {
+  username: document.getElementById('username').value,
+  password: document.getElementById('password').value,
+  role: 'user'
+};
+
+// Simpan ke daftar user
+const users = JSON.parse(localStorage.getItem('kasirapp_users') || '[]');
+users.push(newUser);
+localStorage.setItem('kasirapp_users', JSON.stringify(users));
+
+// Simpan status login dan data default
+localStorage.setItem('isLoggedIn', 'true');
+localStorage.setItem('username', newUser.username);
+localStorage.setItem('role', 'user');
+
+// Inisialisasi data produk awal
+const defaultProduk = [
+  { id: 1, name: "Air Mineral", price: 3000, stock: 100, category: "Minuman", image: "" },
+  { id: 2, name: "Roti Bakar", price: 8000, stock: 50, category: "Makanan", image: "" }
+];
+localStorage.setItem(`kasirapp_produk_list_${newUser.username}`, JSON.stringify(defaultProduk));
+
+// Redirect ke dashboard
+window.location.href = 'dashboard.html';
+  </script>
+</body>
+</html>

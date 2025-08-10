@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laporan - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+<script src="tema.js" defer></script>
+  <style>
+    main {
+      padding: 40px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    select {
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .total-section {
+      margin-top: 20px;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    #logout-btn {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html"class="active">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+  <button onclick="toggleThemeQuick()" class="theme-button">
+    <body>
+
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+
+  <div class="dashboard-container">
+</div>
+
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>Laporan Transaksi</h1>
+      </header>
+
+      <section>
+  <h2>Filter Laporan Transaksi</h2>
+  <div style="margin-bottom: 20px;">
+    <label>Dari Tanggal: <input type="date" id="start-date" /></label>
+    <label style="margin-left: 20px;">Sampai Tanggal: <input type="date" id="end-date" /></label>
+    <button onclick="renderLaporanManual()" style="margin-left: 20px; padding: 8px 16px; border: none; background: #3498db; color: white; border-radius: 6px;">Terapkan</button>
+    <button onclick="downloadCSV()" style="margin-left: 10px; padding: 8px 16px; border: none; background: #27ae60; color: white; border-radius: 6px;">
+  Download CSV
+</button>
+  </div>
+
+  <table id="laporan-table">
+    <thead>
+      <tr>
+        <th>Tanggal</th>
+        <th>Produk</th>
+        <th>Jumlah</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="total-section">
+    Total Penjualan: <span id="total-penjualan">Rp 0</span>
+  </div>
+</section>
+
+    </main>
+  </div>
+
+  <script>
+  // Cek login
+  if (localStorage.getItem('isLoggedIn') !== 'true') {
+    location.href = 'login.html';
+  }
+
+  const username = localStorage.getItem('username') || 'guest';
+  const transaksiKey = `kasirapp_transaksi_list_${username}`;
+  const transaksiList = JSON.parse(localStorage.getItem(transaksiKey)) || [];
+
+  const tableBody = document.querySelector('#laporan-table tbody');
+  const totalPenjualan = document.getElementById('total-penjualan');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  logoutBtn.onclick = () => {
+    if (confirm('Yakin logout?')) {
+      localStorage.removeItem('isLoggedIn');
+      localStorage.removeItem('username');
+      location.href = 'login.html';
+    }
+  };
+
+  function renderLaporanManual() {
+    const startInput = document.getElementById('start-date').value;
+    const endInput = document.getElementById('end-date').value;
+
+    if (!startInput || !endInput) {
+      alert('Silakan isi tanggal awal dan akhir!');
+      return;
+    }
+
+    const start = new Date(startInput);
+    const end = new Date(endInput);
+    end.setHours(23, 59, 59, 999); // Sertakan seluruh hari
+
+    const filtered = transaksiList.filter(tx => {
+      const txDate = new Date(tx.date);
+      return txDate >= start && txDate <= end;
+    });
+
+    renderTabel(filtered);
+  }
+
+  function renderTabel(filtered) {
+    tableBody.innerHTML = '';
+    let total = 0;
+
+    if (filtered.length === 0) {
+      tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">Tidak ada data.</td></tr>';
+    }
+
+    filtered.forEach(tx => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${tx.date}</td>
+        <td>${tx.productName}</td>
+        <td>${tx.quantity}</td>
+        <td>Rp ${tx.total.toLocaleString('id-ID')}</td>
+      `;
+      tableBody.appendChild(tr);
+      total += tx.total;
+    });
+
+    totalPenjualan.textContent = 'Rp ' + total.toLocaleString('id-ID');
+  }
+
+  // Tampilkan data hari ini saat pertama kali load
+  function renderHariIni() {
+    const today = new Date().toISOString().slice(0, 10);
+    const filtered = transaksiList.filter(tx => tx.date === today);
+    renderTabel(filtered);
+
+    document.getElementById('start-date').value = today;
+    document.getElementById('end-date').value = today;
+  }
+
+  renderHariIni();
+</script>
+<script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+  function downloadCSV() {
+  let rows = document.querySelectorAll("#laporan-table tr");
+  let csv = [];
+  
+  for (let row of rows) {
+    let cols = row.querySelectorAll("td, th");
+    let rowData = [];
+    for (let col of cols) {
+      // escape koma dan kutip ganda
+      rowData.push('"' + col.innerText.replace(/"/g, '""') + '"');
+    }
+    csv.push(rowData.join(","));
+  }
+  
+  let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+  let downloadLink = document.createElement("a");
+  downloadLink.download = "laporan-transaksi.csv";
+  downloadLink.href = window.URL.createObjectURL(csvFile);
+  downloadLink.style.display = "none";
+  document.body.appendChild(downloadLink);
+  downloadLink.click();
+}
+</script>
+</body>
+</html>

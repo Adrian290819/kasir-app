@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Backup & Restore - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+<script src="tema.js" defer></script>
+  <style>
+    .section {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      margin-bottom: 30px;
+    }
+
+    .section h2 {
+      margin-top: 0;
+    }
+
+    .btn {
+      background: #3498db;
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn:disabled {
+      background: #bdc3c7;
+      cursor: not-allowed;
+    }
+
+    .upload-input {
+      margin-top: 10px;
+    }
+
+    #restore-status {
+      margin-top: 15px;
+      color: green;
+      font-weight: bold;
+    }
+
+    textarea {
+      width: 100%;
+      height: 250px;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html"class="active">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+  <button onclick="toggleThemeQuick()" class="theme-button">
+    <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+    
+</div>
+
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>Backup & Restore</h1>
+      </header>
+
+      <div class="section">
+        <h2>Backup Data</h2>
+        <p>Klik tombol di bawah untuk mengunduh semua data aplikasi KasirApp dalam format JSON.</p>
+        <button class="btn" onclick="downloadBackup()">📥 Download Backup</button>
+      </div>
+
+      <div class="section">
+        <h2>Restore Data</h2>
+        <p>Unggah file JSON hasil backup untuk mengembalikan data aplikasi. Data lama akan diganti!</p>
+        <input type="file" id="upload-input" class="upload-input" accept=".json" />
+        <button class="btn" onclick="restoreData()">🔄 Restore</button>
+        <p id="restore-status"></p>
+      </div>
+
+      <div class="section">
+        <h2>Pratinjau Data Saat Ini (readonly)</h2>
+        <textarea id="preview-data" readonly></textarea>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const keys = [
+      'kasirapp_produk_list',
+      'kasirapp_transaksi_list',
+      'kasirapp_user_list',
+      'kasirapp_pengeluaran_list'
+    ];
+
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      location.href = 'login.html';
+    }
+
+    document.getElementById('logout-btn').onclick = () => {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        location.href = 'login.html';
+      }
+    };
+
+    function downloadBackup() {
+      const data = {};
+      keys.forEach(k => {
+        data[k] = JSON.parse(localStorage.getItem(k) || '[]');
+      });
+      const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kasirapp-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function restoreData() {
+      const fileInput = document.getElementById('upload-input');
+      const status = document.getElementById('restore-status');
+
+      if (!fileInput.files.length) {
+        alert('Pilih file backup terlebih dahulu!');
+        return;
+      }
+
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        try {
+          const restored = JSON.parse(e.target.result);
+          keys.forEach(k => {
+            if (restored[k]) {
+              localStorage.setItem(k, JSON.stringify(restored[k]));
+            }
+          });
+          status.style.color = 'green';
+          status.textContent = '✅ Restore berhasil!';
+          loadPreview();
+        } catch (err) {
+          status.style.color = 'red';
+          status.textContent = '❌ File tidak valid!';
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function loadPreview() {
+      const data = {};
+      keys.forEach(k => {
+        data[k] = JSON.parse(localStorage.getItem(k) || '[]');
+      });
+      document.getElementById('preview-data').value = JSON.stringify(data, null, 2);
+    }
+function getUsername() {
+  return localStorage.getItem('username') || 'guest';
+}
+
+function withUserKey(baseKey) {
+  return `${baseKey}_${getUsername()}`;
+}
+    loadPreview();
+  </script>
+  <script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>

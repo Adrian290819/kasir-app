@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pengaturan - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <script src="tema.js" defer></script>
+  <style>
+    #theme-toggle-icon {
+  font-size: 0.8rem; /* Sesuaikan ukuran, misalnya 1.6rem, 2rem, dll */
+  display: inline-block;
+  margin-bottom: 1px;
+}
+.theme-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+  padding: 0.8px 0;
+  display: inline-block;
+  width: 100%;
+  color: #ccc;
+}
+.theme-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  transition: transform 0.3s ease;
+}
+    .settings-section {
+      background: #f9f9f9;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+      margin-bottom: 40px;
+    }
+
+    .settings-section h2 {
+      font-size: 1.25rem;
+      margin-bottom: 20px;
+      color: #2c3e50;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+      background: #fff;
+    }
+
+    .settings-section button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .settings-section button:hover {
+      background: #2980b9;
+    }
+
+    .danger-zone {
+      background: #fff6f6;
+      border: 1px solid #e74c3c;
+    }
+
+    .danger-zone button {
+      background: #e74c3c;
+    }
+
+    .danger-zone button:hover {
+      background: #c0392b;
+    }
+  </style>
+</head>
+<body>
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>🧾 Kasir Mutia</h2>
+    </div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html" class="active">Pengaturan</a>
+      <button id="logout-btn" class="btn-logout">Logout</button>
+      <div style="padding: 15px; text-align: center;">
+        <button onclick="toggleThemeQuick()" class="theme-button"></button>
+        <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+      </div>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <h1>Pengaturan Aplikasi</h1>
+    </header>
+
+    <!-- Info Akun -->
+    <section class="settings-section">
+      <h2>Info Akun</h2>
+      <p><strong>Username:</strong> <span id="info-username"></span></p>
+      <p><strong>Nama Pengguna:</strong> <span id="info-nama"></span></p>
+      <p><strong>Login Terakhir:</strong> <span id="info-login"></span></p>
+    </section>
+
+    <!-- Profil Pengguna -->
+    <section class="settings-section">
+      <h2>Profil Pengguna</h2>
+      <div class="form-group">
+        <label for="username-input">Nama Pengguna</label>
+        <input type="text" id="username-input" placeholder="Nama Anda" />
+      </div>
+      <div class="form-group">
+        <label for="old-password">Password Lama</label>
+        <input type="password" id="old-password" placeholder="Masukkan Password Lama" />
+      </div>
+      <div class="form-group">
+        <label for="new-password">Password Baru</label>
+        <input type="password" id="new-password" placeholder="Masukkan Password Baru" />
+      </div>
+      <button onclick="simpanProfil()">Simpan Profil</button>
+    </section>
+
+    <!-- Preferensi Aplikasi -->
+    <section class="settings-section">
+      <h2>Preferensi Aplikasi</h2>
+      <div class="form-group">
+        <label for="theme">Tema Tampilan</label>
+        <select id="theme">
+          <option value="default">Default</option>
+          <option value="dark">Gelap</option>
+          <option value="light">Terang</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="language">Bahasa</label>
+        <select id="language">
+          <option value="id">Bahasa Indonesia</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="notifikasi">Notifikasi Suara</label>
+        <select id="notifikasi">
+          <option value="on">Aktif</option>
+          <option value="off">Nonaktif</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Reset Data -->
+    <section class="settings-section danger-zone">
+      <h2>Zona Bahaya</h2>
+      <p>Reset semua data aplikasi (produk, transaksi, pengeluaran, pengguna, dll).</p>
+      <div class="form-group">
+        <label for="reset-password">Masukkan Password untuk Konfirmasi</label>
+        <input type="password" id="reset-password" placeholder="Masukkan Password Akun" />
+      </div>
+      <button onclick="resetSemuaData()">Reset Seluruh Data</button>
+    </section>
+  </main>
+</div>
+
+<script>
+if (localStorage.getItem('isLoggedIn') !== 'true') {
+  location.href = 'login.html';
+}
+
+const username = localStorage.getItem('username') || 'guest';
+const lastLoginKey = `user_${username}_lastLogin`;
+
+// Tampilkan Info Akun
+document.getElementById('info-username').textContent = username;
+document.getElementById('info-nama').textContent = localStorage.getItem(`user_${username}_nama`) || '-';
+document.getElementById('info-login').textContent = localStorage.getItem(lastLoginKey) || 'Belum tercatat';
+
+// Logout
+document.getElementById('logout-btn').onclick = () => {
+  if (confirm('Yakin ingin logout?')) {
+    localStorage.setItem(lastLoginKey, new Date().toLocaleString());
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    location.href = 'login.html';
+  }
+};
+
+// Load preferensi awal
+const mapping = {
+  'username-input': `user_${username}_nama`,
+  'theme': `user_${username}_tema`,
+  'language': `user_${username}_bahasa`,
+  'notifikasi': `user_${username}_notifikasi`
+};
+
+Object.keys(mapping).forEach(id => {
+  const val = localStorage.getItem(mapping[id]);
+  if (val) document.getElementById(id).value = val;
+});
+
+// Auto Save Preferensi
+['theme','language','notifikasi'].forEach(id => {
+  document.getElementById(id).addEventListener('change', e => {
+    localStorage.setItem(mapping[id], e.target.value);
+    alert(`Preferensi "${id}" berhasil disimpan.`);
+  });
+});
+
+// Simpan Profil dengan cek password lama
+function simpanProfil() {
+  const nama = document.getElementById('username-input').value.trim();
+  const oldPass = document.getElementById('old-password').value;
+  const newPass = document.getElementById('new-password').value;
+  const storedPass = localStorage.getItem(`user_${username}_password`) || '';
+
+  if (!nama) return alert('Nama tidak boleh kosong.');
+
+  if (newPass) {
+    if (!oldPass) return alert('Masukkan password lama.');
+    if (oldPass !== storedPass) return alert('Password lama salah.');
+    localStorage.setItem(`user_${username}_password`, newPass);
+  }
+
+  localStorage.setItem(`user_${username}_nama`, nama);
+  document.getElementById('info-nama').textContent = nama;
+
+  document.getElementById('old-password').value = '';
+  document.getElementById('new-password').value = '';
+
+  alert("Profil berhasil disimpan.");
+}
+
+// Reset semua data dengan konfirmasi password
+function resetSemuaData() {
+  const passInput = document.getElementById('reset-password').value;
+  const storedPass = localStorage.getItem(`user_${username}_password`) || '';
+
+  if (!passInput) return alert('Masukkan password untuk konfirmasi.');
+  if (passInput !== storedPass) return alert('Password salah.');
+
+  if (confirm("Semua data akan dihapus. Lanjutkan?")) {
+    const keys = Object.keys(localStorage).filter(k => k.includes(username));
+    keys.forEach(k => localStorage.removeItem(k));
+    alert("Semua data berhasil direset.");
+    location.reload();
+  }
+}
+
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+}
+</script>
+</body>
+</html>

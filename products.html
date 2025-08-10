@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Data Produk – Kasir Mutia</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="kasir.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+</head>
+<body>
+  <div class="kasir-container">
+    <header><h1>🛍️ Data Produk</h1><a href="dashboard.html">← Dashboard</a></header>
+    <section>
+      <div class="form-group">
+        <input id="prod-name" placeholder="Nama Produk" /><input id="prod-price" type="number" placeholder="Harga (Rp)" /><input id="prod-stock" type="number" placeholder="Stok" /><input id="prod-alert" type="number" placeholder="Threshold Stok Rendah" /><button id="add-prod-btn">Tambah Produk</button>
+      </div>
+    </section>
+    <section>
+      <table><thead><tr><th>Nama</th><th>Harga</th><th>Stok</th><th>Aksi</th></tr></thead><tbody id="prod-list"></tbody></table>
+    </section>
+  </div>
+  <script src="products.js"></script>
+  <script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Code Produk - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+<script src="tema.js" defer></script>
+  <style>
+    main {
+      padding: 40px;
+    }
+
+    .qr-toolbar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .qr-toolbar button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .qr-toolbar button:hover {
+      background: #2980b9;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 20px;
+    }
+
+    .qr-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      position: relative;
+    }
+
+    .qr-card h4 {
+      margin-bottom: 4px;
+    }
+
+    .qr-card p {
+      color: #555;
+      font-size: 0.9rem;
+    }
+
+    .qr-card canvas {
+      margin: 10px 0;
+    }
+
+    .qr-card button {
+      margin-top: 10px;
+      background: #2ecc71;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .qr-card button:hover {
+      background: #27ae60;
+    }
+
+    #no-products {
+      text-align: center;
+      color: #aaa;
+      margin-top: 40px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html"class="active">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+  <button onclick="toggleThemeQuick()" class="theme-button">
+    <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+  
+</div>
+
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>QR Code Produk</h1>
+      </header>
+
+      <div class="qr-toolbar">
+        <button onclick="cetakSemua()">🖨️ Cetak Semua QR</button>
+      </div>
+
+      <div id="qr-container" class="qr-grid"></div>
+      <p id="no-products" style="display: none;">Belum ada produk tersedia.</p>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+  <script>
+    // 🔒 Cek login
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('logout-btn').onclick = function () {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        location.href = 'login.html';
+      }
+    };
+
+    // 🔑 Ambil data user
+    function getUsername() {
+      return localStorage.getItem('username') || 'guest';
+    }
+
+    function withUserKey(key) {
+      return `${key}_${getUsername()}`;
+    }
+
+    const produkKey = withUserKey('kasirapp_produk_list');
+    const produkList = JSON.parse(localStorage.getItem(produkKey)) || [];
+
+    const qrContainer = document.getElementById('qr-container');
+    const noProdukMsg = document.getElementById('no-products');
+
+    if (produkList.length === 0) {
+      noProdukMsg.style.display = 'block';
+    } else {
+      produkList.forEach((produk, index) => {
+        const card = document.createElement('div');
+        card.className = 'qr-card';
+
+        const nama = document.createElement('h4');
+        nama.textContent = produk.name;
+
+        const harga = document.createElement('p');
+        harga.textContent = 'Rp ' + produk.price.toLocaleString('id-ID');
+
+        const canvas = document.createElement('canvas');
+        const qrData = JSON.stringify({
+          id: produk.id,
+          name: produk.name,
+          price: produk.price
+        });
+
+        QRCode.toCanvas(canvas, qrData, { width: 150 }, function (error) {
+          if (error) console.error(error);
+        });
+
+        const downloadBtn = document.createElement('button');
+        downloadBtn.textContent = '⬇️ Download';
+        downloadBtn.onclick = () => {
+          const link = document.createElement('a');
+          link.download = `qr-${produk.name}.png`;
+          link.href = canvas.toDataURL("image/png");
+          link.click();
+        };
+
+        card.appendChild(nama);
+        card.appendChild(harga);
+        card.appendChild(canvas);
+        card.appendChild(downloadBtn);
+        qrContainer.appendChild(card);
+      });
+    }
+
+    // 🖨️ Cetak semua QR
+    function cetakSemua() {
+      const printWindow = window.open('', '', 'width=800,height=600');
+      printWindow.document.write('<html><head><title>Cetak QR Produk</title></head><body>');
+      produkList.forEach(produk => {
+        const qrData = JSON.stringify({
+  type: 'qr',
+  id: produk.id,
+  name: produk.name,
+  price: produk.price
+});
+        const canvas = document.createElement('canvas');
+        QRCode.toCanvas(canvas, qrData, { width: 150 }, function () {
+          const dataURL = canvas.toDataURL('image/png');
+          printWindow.document.write(`
+            <div style="display:inline-block;margin:20px;text-align:center;">
+              <img src="${dataURL}" width="150" />
+              <br>
+              <strong>${produk.name}</strong><br>
+              Rp ${produk.price.toLocaleString('id-ID')}
+            </div>
+          `);
+        });
+      });
+
+      setTimeout(() => {
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+      }, 1000);
+    }
+  </script>
+  <script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+  document.getElementById('scan-qr-btn').addEventListener('click', function () {
+  const reader = document.getElementById('reader');
+  reader.style.display = 'block';
+  
+  const html5QrCode = new Html5Qrcode("reader");
+
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      const cameraId = devices[0].id;
+      html5QrCode.start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 }
+        },
+        qrCodeMessage => {
+          try {
+            const data = JSON.parse(qrCodeMessage);
+            if (data.type === 'qr' && data.id && data.name) {
+              const found = produkList.find(p => p.id === data.id);
+              if (found) {
+                selectedProduk = found;
+                renderProdukList(searchInput.value);
+                alert(`Produk "${found.name}" dipilih!`);
+              } else {
+                alert("Produk tidak ditemukan di database.");
+              }
+              html5QrCode.stop();
+              reader.innerHTML = '';
+              reader.style.display = 'none';
+            }
+          } catch (e) {
+            alert("QR Code tidak valid.");
+            console.error(e);
+          }
+        },
+        error => {
+          console.warn(`QR Scan error: ${error}`);
+        }
+      );
+    }
+  }).catch(err => {
+    console.error("Camera access error: ", err);
+    alert("Tidak dapat mengakses kamera.");
+  });
+});
+
+</script>
+
+</body>
+</html>

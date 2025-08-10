@@ -1,0 +1,318 @@
+/* Global Styles for KasirApp - Enhanced Modern Look */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  background: #f4f6f8;
+  display: flex;
+  min-height: 100vh;
+}
+
+.dashboard-container {
+  display: flex;
+  width: 100%;
+}
+
+/* SIDEBAR */
+.sidebar {
+  background: #1f2d3d;
+  color: white;
+  width: 260px;
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.sidebar-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.sidebar-header h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* Sidebar Navigation */
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  padding: 0 20px;
+}
+
+.sidebar nav a {
+  display: block;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  color: #ecf0f1;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.sidebar nav a:hover {
+  background: #3498db;
+  padding-left: 24px;
+}
+
+.sidebar nav a.active {
+  background: #3498db;
+  padding-left: 24px;
+}
+
+/* MAIN CONTENT */
+main {
+  flex-grow: 1;
+  padding: 40px;
+  background: white;
+  border-radius: 0 16px 16px 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+/* LOGOUT BUTTON */
+#logout-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.2);
+  transition: background-color 0.2s ease;
+}
+.card {
+  padding: 20px;
+  border-radius: 12px;
+  color: white;
+  flex: 1;
+  min-width: 200px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+  transition: transform 0.3s ease;
+}
+.card:hover {
+  transform: translateY(-4px);
+}
+
+.card.blue { background: #3498db; }
+.card.green { background: #2ecc71; }
+.card.red { background: #e74c3c; }
+.card.orange { background: #e67e22; }
+.card.grey { background: #7f8c8d; }
+.card.purple { background: #9b59b6; }
+
+.summary-section {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+#logout-btn:hover {
+  background: #c0392b;
+}
+
+/* FORM */
+form {
+  margin-bottom: 30px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+form input[type="text"],
+form input[type="number"],
+form select {
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  width: 220px;
+  background: white;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
+}
+
+form button {
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+form button:hover {
+  background: #2980b9;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  background: white;
+  overflow: hidden;
+}
+
+thead {
+  background: #3498db;
+  color: white;
+}
+
+thead th, tbody td {
+  padding: 14px 18px;
+  border-bottom: 1px solid #f1f1f1;
+  text-align: left;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background-color: #f0f8ff;
+}
+
+/* BUTTONS */
+.action-buttons button {
+  margin-right: 6px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s ease;
+}
+
+.edit-btn {
+  background-color: #f1c40f;
+  color: #fff;
+}
+
+.edit-btn:hover {
+  background-color: #d4ac0d;
+}
+
+.delete-btn {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background-color: #c0392b;
+}
+
+/* MESSAGES */
+.message {
+  margin-top: 24px;
+  font-weight: 600;
+  color: green;
+  font-size: 1rem;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sidebar nav a {
+    margin: 6px;
+    padding: 10px 14px;
+  }
+
+  main {
+    padding: 20px;
+    border-radius: 0;
+  }
+}
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 12px;
+  }
+
+  .sidebar-header {
+    display: none;
+  }
+
+  .sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .sidebar nav a {
+    flex: 1 1 calc(50% - 12px);
+    padding: 12px;
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  main {
+    padding: 20px 16px;
+    border-radius: 0;
+  }
+
+  header h1 {
+    font-size: 1.5rem;
+  }
+
+  .summary-section {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .card {
+    width: 100%;
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  table th,
+  table td {
+    padding: 10px;
+  }
+}
+
+

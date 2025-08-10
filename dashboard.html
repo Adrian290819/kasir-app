@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <script src="tema.js" defer></script>
+  <style>
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+      <a href="dashboard.html"class="active">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>
+        <div style="padding: 10px; text-align: center;">
+          <button onclick="toggleThemeQuick()" class="theme-button">
+          <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+
+  <div class="dashboard-container">
+        </div>
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+  <h1>Dashboard</h1>
+</header>
+
+      <section class="summary-section" style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 40px;">
+        <div class="card blue">
+          <h3>Transaksi Hari Ini</h3>
+          <p id="stat-transactions">Rp 0</p>
+        </div>
+        <div class="card green">
+          <h3>Total Produk</h3>
+          <p id="stat-products">0</p>
+        </div>
+        <div class="card red">
+          <h3>Produk Terjual</h3>
+          <p id="stat-terjual">0 pcs</p>
+        </div>
+        <div class="card orange">
+          <h3>Stok Rendah</h3>
+          <p id="stat-lowstock">0 Produk</p>
+        </div>
+        <div class="card grey">
+          <h3>Pengeluaran Hari Ini</h3>
+          <p id="stat-expense">Rp 0</p>
+        </div>
+        <div class="card purple">
+          <h3>Laba Kotor</h3>
+          <p id="stat-profit">Rp 0</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>Riwayat Transaksi Hari Ini</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Jam</th>
+              <th>Produk</th>
+              <th>Jumlah</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="transaction-table-body"></tbody>
+        </table>
+        <p id="no-transactions" class="message" style="display:none; color:#999;">Belum ada transaksi hari ini.</p>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    const username = localStorage.getItem('username') || 'guest';
+const produkKey = `kasirapp_produk_list_${username}`;
+const transaksiKey = `kasirapp_transaksi_list_${username}`;
+const pengeluaranKey = `kasirapp_pengeluaran_list_${username}`;
+
+
+    let produkList = JSON.parse(localStorage.getItem(produkKey) || '[]');
+    const transaksiList = JSON.parse(localStorage.getItem(transaksiKey) || '[]');
+    const pengeluaranList = JSON.parse(localStorage.getItem(pengeluaranKey) || '[]');
+
+    const today = new Date().toISOString().slice(0, 10);
+
+    const transaksiToday = transaksiList.filter(tx => tx.date === today);
+    const pengeluaranToday = pengeluaranList.filter(p => p.tanggal === today);
+
+    const totalTransaksi = transaksiToday.reduce((acc, tx) => acc + tx.total, 0);
+    const totalItemTerjual = transaksiToday.reduce((acc, tx) => acc + tx.quantity, 0);
+    const lowStock = produkList.filter(p => p.stock !== undefined && p.stock <= 5).length;
+    const totalPengeluaran = pengeluaranToday.reduce((acc, p) => acc + p.nominal, 0);
+    const labaKotor = totalTransaksi - totalPengeluaran;
+
+    document.getElementById('stat-transactions').textContent = `Rp ${totalTransaksi.toLocaleString('id-ID')}`;
+    document.getElementById('stat-products').textContent = `${produkList.length}`;
+    document.getElementById('stat-lowstock').textContent = `${lowStock} Produk`;
+    document.getElementById('stat-terjual').textContent = `${totalItemTerjual} pcs`;
+    document.getElementById('stat-expense').textContent = `Rp ${totalPengeluaran.toLocaleString('id-ID')}`;
+    document.getElementById('stat-profit').textContent = `Rp ${labaKotor.toLocaleString('id-ID')}`;
+
+    const tbody = document.getElementById('transaction-table-body');
+    const noTxMsg = document.getElementById('no-transactions');
+
+    if (transaksiToday.length === 0) {
+      noTxMsg.style.display = 'block';
+    } else {
+      transaksiToday.forEach(tx => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${tx.date}</td>
+          <td>${tx.time || '-'}</td>
+          <td>${tx.productName}</td>
+          <td>${tx.quantity}</td>
+          <td>Rp ${tx.total.toLocaleString('id-ID')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
+  <script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>

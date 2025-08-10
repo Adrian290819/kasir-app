@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riwayat Transaksi - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <script src="tema.js" defer></script>
+  <style>
+    .btn-danger {
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+
+    .btn-danger:hover {
+      background-color: #c0392b;
+    }
+
+    #no-transactions {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      color: #666;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    table th, table td {
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    table th {
+      background: #3498db;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      table th, table td {
+        font-size: 0.9rem;
+        padding: 10px;
+      }
+
+      header h1 {
+        font-size: 1.3rem;
+      }
+
+      .btn-danger {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html"class="active">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+          <button onclick="toggleThemeQuick()" class="theme-button">
+            <body>
+  <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+
+  <div class="dashboard-container">
+        </div>
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>Riwayat Transaksi</h1>
+        
+      </header>
+<div style="margin: 15px 0; display: flex; gap: 10px; flex-wrap: wrap;">
+  <input type="month" id="filter-bulan" />
+  <input type="date" id="filter-tanggal" />
+  <button onclick="resetFilter()" style="padding:8px 14px; background:#3498db; color:#fff; border:none; border-radius:6px; cursor:pointer;">
+    Reset Filter
+  </button>
+</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>Jam</th>
+            <th>Produk</th>
+            <th>Jumlah</th>
+            <th>Harga Satuan</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="riwayat-tbody"></tbody>
+      </table>
+
+      <p id="no-transactions" style="display:none;">Belum ada transaksi.</p>
+
+      <button class="btn-danger" id="hapus-semua-transaksi-btn">Hapus Semua Transaksi</button>
+    </main>
+  </div>
+
+  <script>
+    // Validasi login
+    if(localStorage.getItem('isLoggedIn') !== 'true'){
+      window.location.href = 'login.html';
+    }
+
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      if(confirm('Yakin ingin logout?')){
+        localStorage.removeItem('isLoggedIn');
+        window.location.href = 'login.html';
+      }
+    });
+
+    function getUsername() {
+      return localStorage.getItem('username') || 'guest';
+    }
+
+    function withUserKey(baseKey) {
+      return `${baseKey}_${getUsername()}`;
+    }
+
+    const username = localStorage.getItem('username') || 'guest';
+const produkKey = `kasirapp_produk_list_${username}`;
+const transaksiKey = `kasirapp_transaksi_list_${username}`;
+        const tbody = document.getElementById('riwayat-tbody');
+    const noTxMsg = document.getElementById('no-transactions');
+    const transaksiData = JSON.parse(localStorage.getItem(transaksiKey) || '[]');
+
+    function renderRiwayat() {
+  tbody.innerHTML = '';
+
+  if (transaksiData.length === 0) {
+    noTxMsg.style.display = 'block';
+    return;
+  }
+
+  noTxMsg.style.display = 'none';
+  transaksiData.sort((a, b) =>
+    new Date(b.date + 'T' + (b.time || '00:00:00')) -
+    new Date(a.date + 'T' + (a.time || '00:00:00'))
+  );
+
+  const filterBulan = document.getElementById('filter-bulan').value; // yyyy-mm
+  const filterTanggal = document.getElementById('filter-tanggal').value; // yyyy-mm-dd
+
+  let currentDate = '';
+  transaksiData.forEach(tx => {
+    let tampilkan = true;
+
+    // Filter bulan
+    if (filterBulan && !tx.date.startsWith(filterBulan)) {
+      tampilkan = false;
+    }
+
+    // Filter tanggal
+    if (filterTanggal && tx.date !== filterTanggal) {
+      tampilkan = false;
+    }
+
+    if (!tampilkan) return; // Skip transaksi yang tidak cocok filter
+
+    // Buat header tanggal jika ganti hari
+    if (tx.date !== currentDate) {
+      currentDate = tx.date;
+      const dateRow = document.createElement('tr');
+      dateRow.innerHTML = `
+        <td colspan="6" style="
+          background:#ecf0f1;
+          font-weight:bold;
+          color:#2c3e50;
+          text-align:left;
+          padding:8px;
+        ">
+          📅 ${currentDate}
+        </td>
+      `;
+      tbody.appendChild(dateRow);
+    }
+
+    // Baris transaksi
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${tx.date}</td>
+      <td>${tx.time || '-'}</td>
+      <td>${tx.productName}</td>
+      <td>${tx.quantity}</td>
+      <td>Rp ${tx.pricePerUnit.toLocaleString('id-ID')}</td>
+      <td>Rp ${tx.total.toLocaleString('id-ID')}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Event listener untuk filter otomatis
+document.getElementById('filter-bulan').addEventListener('change', renderRiwayat);
+document.getElementById('filter-tanggal').addEventListener('change', renderRiwayat);
+
+// Tombol reset filter
+function resetFilter() {
+  document.getElementById('filter-bulan').value = '';
+  document.getElementById('filter-tanggal').value = '';
+  renderRiwayat();
+}
+
+// PIN proteksi untuk penghapusan
+    const ADMIN_PIN = "290819";
+
+    document.getElementById('hapus-semua-transaksi-btn').addEventListener('click', () => {
+      const inputPin = prompt("Masukkan PIN untuk menghapus semua transaksi:");
+      if (inputPin === null) return;
+
+      if (inputPin === ADMIN_PIN) {
+        if (confirm("Yakin ingin menghapus semua riwayat transaksi?")) {
+          localStorage.removeItem(transaksiKey);
+          alert("Semua transaksi berhasil dihapus.");
+          location.reload();
+        }
+      } else {
+        alert("PIN salah. Akses ditolak.");
+      }
+    });
+
+    renderRiwayat();
+  </script>
+  <script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>

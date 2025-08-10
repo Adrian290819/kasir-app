@@ -1,0 +1,19 @@
+/* Tombol Logout */
+.btn-logout {
+  background: #f44336;  /* warna merah */
+  color: white;
+  padding: 15px 18px;   /* ukuran tombol */
+  font-size: 14px;      /* ukuran teks */
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: 0.2s;
+  display: block;
+  width: 90%;           /* biar sejajar dengan menu sidebar */
+  margin: 15px auto;
+  text-align: center;
+}
+
+.btn-logout:hover {
+  background: #d32f2f;
+}

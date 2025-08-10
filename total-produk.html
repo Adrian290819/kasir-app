@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Total Produk - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <script src="tema.js" defer></script>
+  <style>
+    .main-card {
+      margin-top: 40px;
+      padding: 30px;
+      background: #4caf50;
+      color: white;
+      text-align: center;
+      border-radius: 12px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .main-card h1 {
+      margin-bottom: 10px;
+    }
+    .main-card p {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+    @media (max-width: 768px) {
+      .main-card p {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 KasirApp</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="kasir.html">Transaksi Kasir</a>
+        <a href="riwayat.html">Riwayat Transaksi</a>
+        <a href="data-produk.html">Data Produk</a>
+        <a href="pengeluaran.html">Pengeluaran</a>
+        <a href="statistik-penjualan.html">Statistik Penjualan</a>
+        <a href="backup-restore.html">Backup & Restore</a>
+        <a href="qr-code-produk.html">QR Code Produk</a>
+        <a href="laporan.html">Laporan</a>
+        <a href="pengaturan.html">Pengaturan</a>
+        <div style="padding: 10px; text-align: center;">
+          <button onclick="toggleThemeQuick()" class="theme-button">🌙</button>
+          <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- Konten Utama -->
+    <main>
+      <header>
+        <h1>Total Produk</h1>
+        <button id="logout-btn">Logout</button>
+      </header>
+
+      <div class="main-card">
+        <h1>Total Produk Tersedia</h1>
+        <p id="total-produk">0</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Script Utama -->
+  <script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      location.href = 'login.html';
+    }
+
+    const username = localStorage.getItem('username') || 'guest';
+const produkKey = `kasirapp_produk_list_${username}`;
+const transaksiKey = `kasirapp_transaksi_list_${username}`;
+    document.getElementById("total-produk").textContent = produkList.length;
+
+    // Logout
+    document.getElementById('logout-btn').addEventListener('click', () => {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        location.href = 'login.html';
+      }
+    });
+
+    // Sidebar Toggle Mobile
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+    document.querySelectorAll('.sidebar nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>

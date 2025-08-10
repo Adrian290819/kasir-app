@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pengeluaran - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <script src="tema.js" defer></script>
+  <style>
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .form-row input, .form-row button {
+      padding: 12px 16px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .form-row input:focus {
+      border-color: #3498db;
+      outline: none;
+    }
+
+    #form-pengeluaran button {
+      background-color: #3498db;
+      color: white;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    #form-pengeluaran button:hover {
+      background-color: #2980b9;
+    }
+
+    .summary {
+      background: #f9fafc;
+      margin-top: 20px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.04);
+    }
+
+    #hapus-semua {
+      margin-top: 24px;
+      padding: 12px 24px;
+      background-color: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    #hapus-semua:hover {
+      background-color: #c0392b;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+      border-radius: 12px;
+      margin-top: 20px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    th, td {
+      padding: 14px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .delete-btn {
+      background-color: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s ease;
+    }
+
+    .delete-btn:hover {
+      background-color: #c0392b;
+    }
+
+    @media (max-width: 768px) {
+      .form-row {
+        flex-direction: column;
+      }
+
+      header h1 {
+        font-size: 1.4rem;
+      }
+
+      th, td {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+        <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html"class="active">Pengeluaran</a>
+      <a href="statistik-penjualan.html">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+          <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+          
+            
+        </div>
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>Data Pengeluaran</h1>
+      </header>
+
+      <section class="promo-form">
+        <form id="form-pengeluaran">
+          <div class="form-row">
+            <input type="text" id="keterangan" placeholder="Keterangan pengeluaran" required />
+            <input type="number" id="jumlah" placeholder="Jumlah (Rp)" required min="1" />
+            <button type="submit">Tambah</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="promo-list">
+        <table>
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Jam</th>
+              <th>Keterangan</th>
+              <th>Jumlah</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="pengeluaran-tbody"></tbody>
+        </table>
+      </section>
+
+      <div class="summary">
+        <span>Total Pengeluaran</span>
+        <span id="total-pengeluaran">Rp 0</span>
+      </div>
+
+      <button id="hapus-semua">Hapus Semua Pengeluaran</button>
+    </main>
+  </div>
+
+  <script>
+    if (localStorage.getItem('isLoggedIn') !== 'true') {
+      window.location.href = 'login.html';
+    }
+
+    function getUsername() {
+      return localStorage.getItem('username') || 'guest';
+    }
+
+    function withUserKey(baseKey) {
+      return `${baseKey}_${getUsername()}`;
+    }
+
+    const pengeluaranKey = withUserKey('kasirapp_pengeluaran_list');
+    let pengeluaranList = JSON.parse(localStorage.getItem(pengeluaranKey) || '[]');
+
+    const tbody = document.getElementById('pengeluaran-tbody');
+    const form = document.getElementById('form-pengeluaran');
+    const keteranganInput = document.getElementById('keterangan');
+    const jumlahInput = document.getElementById('jumlah');
+    const totalLabel = document.getElementById('total-pengeluaran');
+    const hapusSemuaBtn = document.getElementById('hapus-semua');
+
+    document.getElementById('logout-btn').onclick = () => {
+      if (confirm('Yakin ingin logout?')) {
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
+        window.location.href = 'login.html';
+      }
+    };
+
+    function renderPengeluaran() {
+      tbody.innerHTML = '';
+      let total = 0;
+
+      pengeluaranList.forEach((item, index) => {
+        total += item.nominal;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.tanggal}</td>
+          <td>${item.jam || '-'}</td>
+          <td>${item.keterangan}</td>
+          <td>Rp ${item.nominal.toLocaleString('id-ID')}</td>
+          <td><button class="delete-btn" onclick="hapus(${index})">Hapus</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      totalLabel.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+    }
+
+    function hapus(index) {
+      if (confirm("Yakin ingin menghapus item ini?")) {
+        pengeluaranList.splice(index, 1);
+        localStorage.setItem(pengeluaranKey, JSON.stringify(pengeluaranList));
+        renderPengeluaran();
+      }
+    }
+
+    hapusSemuaBtn.onclick = () => {
+  const inputPin = prompt("Masukkan PIN untuk menghapus semua pengeluaran:");
+  const userPassword = localStorage.getItem("password");
+
+  if (inputPin === null) return;
+
+  if (inputPin === userPassword) {
+    if (confirm("Yakin ingin menghapus semua pengeluaran?")) {
+      pengeluaranList = [];
+      localStorage.setItem(pengeluaranKey, JSON.stringify(pengeluaranList));
+      renderPengeluaran();
+      alert("Semua pengeluaran berhasil dihapus.");
+    }
+  } else {
+    alert("PIN salah. Akses ditolak.");
+  }
+};
+
+    form.onsubmit = e => {
+      e.preventDefault();
+
+      const keterangan = keteranganInput.value.trim();
+      const jumlah = parseInt(jumlahInput.value);
+
+      if (!keterangan || isNaN(jumlah) || jumlah < 1) return;
+
+      const now = new Date();
+      const tanggal = now.toISOString().slice(0, 10);
+      const jam = now.toTimeString().split(' ')[0];
+
+      pengeluaranList.push({ tanggal, jam, keterangan, nominal: jumlah });
+      localStorage.setItem(pengeluaranKey, JSON.stringify(pengeluaranList));
+      form.reset();
+      renderPengeluaran();
+    };
+
+    renderPengeluaran();
+  </script>
+  <script>
+  function toggleSidebar() {
+    document.querySelector('.sidebar').classList.toggle('open');
+  }
+
+  // Tutup sidebar jika menu diklik (untuk mobile)
+  document.querySelectorAll('.sidebar nav a').forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.querySelector('.sidebar').classList.remove('open');
+      }
+    });
+  });
+</script>
+</body>
+</html>

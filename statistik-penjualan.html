@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Statistik Penjualan - KasirApp</title>
+  <link rel="stylesheet" href="style-kasirapp.css" />
+  <link rel="stylesheet" href="style-tema.css" />
+  <link rel="stylesheet" href="style.promo.css" />
+  <link rel="stylesheet" href="style-kasir.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="tema.js" defer></script>
+  <style>
+    .stat-box {
+      background: linear-gradient(145deg, #ffffff, #f1f1f1);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      text-align: center;
+      flex: 1;
+      transition: transform 0.3s ease;
+    }
+
+    .stat-box:hover {
+      transform: translateY(-5px);
+    }
+
+    .stat-box h3 {
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #2c3e50;
+    }
+
+    .stat-box p {
+      font-size: 1.6rem;
+      font-weight: bold;
+      color: #2ecc71;
+    }
+
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .chart-container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      overflow-x: auto;
+    }
+
+    canvas {
+      max-width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .stats-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>🧾 Kasir Mutia</h2>
+      </div>
+      <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="kasir.html">Transaksi Kasir</a>
+      <a href="riwayat.html">Riwayat Transaksi</a>
+      <a href="data-produk.html">Data Produk</a>
+      <a href="pengeluaran.html">Pengeluaran</a>
+      <a href="statistik-penjualan.html"class="active">Statistik Penjualan</a>
+      <a href="laporan.html">Laporan</a>
+      <a href="stok-masuk.html">Stok Masuk</a>
+      <a href="supplier.html">Supplier</a>
+      <a href="retur-barang.html">Retur Barang</a>
+      <a href="qr-code-produk.html">QR Code Produk</a>
+      <a href="backup-restore.html">Backup & Restore</a>
+      <a href="pengaturan.html">Pengaturan</a>
+        <button id="logout-btn" class="btn-logout">Logout</button>  
+        <div style="padding: 10px; text-align: center;">
+          <button class="hamburger-btn" onclick="toggleSidebar()">☰</button>
+        </div>
+      </nav>
+    </aside>
+
+    <main>
+      <header>
+        <h1>📊 Statistik Penjualan</h1>
+      </header>
+
+      <section class="stats-container">
+        <div class="stat-box">
+          <h3>Total Pendapatan</h3>
+          <p id="total-pendapatan">Rp 0</p>
+        </div>
+        <div class="stat-box">
+          <h3>Jumlah Produk Terjual</h3>
+          <p id="total-produk">0</p>
+        </div>
+        <div class="stat-box">
+          <h3>Total Transaksi</h3>
+          <p id="total-transaksi">0</p>
+        </div>
+        <div class="stat-box">
+          <h3>Total Pengeluaran</h3>
+          <p id="total-pengeluaran">Rp 0</p>
+        </div>
+      </section>
+
+      <section class="chart-container">
+        <canvas id="chart-penjualan"></canvas>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      location.href = "login.html";
+    }
+
+    document.getElementById("logout-btn").onclick = () => {
+      if (confirm("Yakin logout?")) {
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("username");
+        location.href = "login.html";
+      }
+    };
+
+    const username = localStorage.getItem("username") || "guest";
+    const transaksiKey = `kasirapp_transaksi_list_${username}`;
+    const pengeluaranKey = `kasirapp_pengeluaran_list_${username}`;
+    const transaksi = JSON.parse(localStorage.getItem(transaksiKey) || '[]');
+    const pengeluaran = JSON.parse(localStorage.getItem(pengeluaranKey) || '[]');
+
+    const totalPendapatan = transaksi.reduce((sum, tx) => sum + tx.total, 0);
+    const totalProduk = transaksi.reduce((sum, tx) => sum + tx.quantity, 0);
+    const totalTransaksi = transaksi.length;
+    const totalPengeluaran = pengeluaran.reduce((sum, p) => sum + p.nominal, 0);
+
+    document.getElementById("total-pendapatan").textContent = "Rp " + totalPendapatan.toLocaleString("id-ID");
+    document.getElementById("total-produk").textContent = totalProduk;
+    document.getElementById("total-transaksi").textContent = totalTransaksi;
+    document.getElementById("total-pengeluaran").textContent = "Rp " + totalPengeluaran.toLocaleString("id-ID");
+
+    const penjualanPerHari = {};
+    transaksi.forEach(tx => {
+      const tgl = tx.date;
+      if (!penjualanPerHari[tgl]) penjualanPerHari[tgl] = 0;
+      penjualanPerHari[tgl] += tx.total;
+    });
+
+    const labels = Object.keys(penjualanPerHari).sort();
+    const data = labels.map(tgl => penjualanPerHari[tgl]);
+
+    const ctx = document.getElementById('chart-penjualan').getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Pendapatan Harian',
+          data,
+          borderColor: '#3498db',
+          backgroundColor: 'rgba(52, 152, 219, 0.2)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return 'Rp ' + context.raw.toLocaleString("id-ID");
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: value => "Rp " + value.toLocaleString("id-ID")
+            }
+          }
+        }
+      }
+    });
+
+    function toggleSidebar() {
+      document.querySelector('.sidebar').classList.toggle('open');
+    }
+
+    document.querySelectorAll('.sidebar nav a').forEach(link => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth <= 768) {
+          document.querySelector('.sidebar').classList.remove('open');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
